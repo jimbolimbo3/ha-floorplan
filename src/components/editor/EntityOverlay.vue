@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { EntityConfig } from '../../types/floorplan';
+import type { EntityConfig, EntityState } from '../../types/floorplan';
 import { useFloorplanStore } from '../../stores/floorplan';
 
 const props = defineProps<{
@@ -253,11 +253,115 @@ const styleObject = computed(() => {
 
 const labelStyle = computed(() => {
   const { offsetX, offsetY, color } = props.entity.labelConfig || {};
+  const state = store.entityStates[props.entity.entityId];
   return {
     transform: `translate(-50%, -50%) translate(${offsetX || 0}%, ${offsetY || 0}%)`,
-    color: color || '#ffffff',
+    color: props.entity.type === 'sensor' ? getSensorTextColor(state?.state, getSensorDeviceClass(state)) : color || '#ffffff',
   };
 });
+
+const labelText = computed(() => {
+  const state = store.entityStates[props.entity.entityId];
+  if (props.entity.type === 'sensor') {
+    return state?.displayValue || state?.state || props.entity.label;
+  }
+  return props.entity.label;
+});
+
+function getSensorDeviceClass(state?: EntityState) {
+  if (state?.deviceClass) return state.deviceClass;
+  if (props.entity.sensorDeviceClass) return props.entity.sensorDeviceClass;
+  if (state?.unit === 'dB') return 'sound_pressure';
+  if (state?.unit === 'ppm') return 'carbon_dioxide';
+  if (['Mbps', 'Mbit/s', 'MB/s', 'kB/s'].includes(state?.unit || '')) return 'data_rate';
+  if (['GB', 'MB', 'kWh'].includes(state?.unit || '')) return state?.unit === 'kWh' ? 'energy' : 'data_size';
+  if (state?.unit === 'dBm') return 'signal_strength';
+  if (state?.unit === '%') return 'humidity';
+  if (state?.unit === 'W') return 'power';
+  if (state?.unit === 'lx') return 'illuminance';
+  if (state?.unit === 'µg/m³') return 'pm25';
+  if (state?.unit === 'V') return 'voltage';
+  if (state?.unit === 'A') return 'current';
+  return 'temperature';
+}
+
+function getSensorTextColor(value?: string, deviceClass = 'temperature') {
+  if (deviceClass === 'connectivity') {
+    const normalizedValue = String(value || '').toLowerCase();
+    if (['on', 'online', 'connected', 'up', 'true'].includes(normalizedValue)) return '#22c55e';
+    if (['off', 'offline', 'disconnected', 'down', 'false', 'unavailable', 'unknown'].includes(normalizedValue)) return '#ef4444';
+    return '#f59e0b';
+  }
+
+  const numberValue = Number.parseFloat(String(value || '').replace(',', '.'));
+  if (!Number.isFinite(numberValue)) return '#ffffff';
+
+  if (deviceClass === 'humidity') {
+    if (numberValue < 30) return '#f59e0b';
+    if (numberValue <= 60) return '#22c55e';
+    if (numberValue <= 70) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  if (deviceClass === 'pressure') {
+    if (numberValue < 1000) return '#38bdf8';
+    if (numberValue <= 1025) return '#22c55e';
+    return '#f59e0b';
+  }
+
+  if (deviceClass === 'carbon_dioxide') {
+    if (numberValue < 800) return '#22c55e';
+    if (numberValue < 1200) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  if (deviceClass === 'sound_pressure') {
+    if (numberValue < 50) return '#22c55e';
+    if (numberValue < 65) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  if (deviceClass === 'data_rate') {
+    if (numberValue < 10) return '#ef4444';
+    if (numberValue < 100) return '#f59e0b';
+    return '#22c55e';
+  }
+
+  if (deviceClass === 'signal_strength') {
+    if (numberValue <= -80) return '#ef4444';
+    if (numberValue <= -65) return '#f59e0b';
+    return '#22c55e';
+  }
+
+  if (deviceClass === 'battery') {
+    if (numberValue < 20) return '#ef4444';
+    if (numberValue < 50) return '#f59e0b';
+    return '#22c55e';
+  }
+
+  if (deviceClass === 'power' || deviceClass === 'energy' || deviceClass === 'data_size') {
+    if (numberValue < 80) return '#22c55e';
+    if (numberValue < 120) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  if (deviceClass === 'illuminance') {
+    if (numberValue < 100) return '#38bdf8';
+    if (numberValue < 800) return '#22c55e';
+    return '#f59e0b';
+  }
+
+  if (deviceClass === 'pm25' || deviceClass === 'volatile_organic_compounds') {
+    if (numberValue < 300) return '#22c55e';
+    if (numberValue < 1000) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  if (numberValue < 18) return '#38bdf8';
+  if (numberValue < 24) return '#22c55e';
+  if (numberValue < 28) return '#f59e0b';
+  return '#ef4444';
+}
 
 </script>
 
@@ -267,7 +371,7 @@ const labelStyle = computed(() => {
     <!-- Optional: Label inside or tooltip? -->
     <div v-if="entity.labelConfig.show" ref="labelRef" class="entity-label" :style="labelStyle"
       @mousedown="onLabelMouseDown" @touchstart="onLabelTouchStart" @click.stop>
-      {{ entity.label }}
+      {{ labelText }}
     </div>
   </div>
 </template>

@@ -5261,7 +5261,7 @@ const _f = { class: "viewer-area" }, mf = {
     }
     function X(N) {
       const O = n.entityStates[N.entityId];
-      return N.type === "sensor" && O?.displayValue ? O.displayValue : N.label;
+      return N.type === "sensor" && O?.displayValue ? O.displayValue : N.type === "sensor" && O?.state ? O.state : N.label;
     }
     function W(N) {
       return N ? N.map((O) => `${O.x} ${O.y}`).join(",") : "";
@@ -5344,7 +5344,7 @@ const _f = { class: "viewer-area" }, mf = {
   for (const [o, i] of t)
     n[o] = i;
   return n;
-}, Cf = /* @__PURE__ */ Qr(Sf, [["__scopeId", "data-v-82a61f8f"]]), Tf = {
+}, Cf = /* @__PURE__ */ Qr(Sf, [["__scopeId", "data-v-8271ff69"]]), Tf = {
   key: 1,
   class: "error"
 }, Pf = /* @__PURE__ */ Ro({
@@ -5417,7 +5417,7 @@ const _f = { class: "viewer-area" }, mf = {
       });
       n.value && n.value.dispatchEvent(f);
     }
-    return console.info("%c HA Floorplan Card %c dev ", "background: #333; color: #fff", "background: #0ea5e9; color: #fff"), (l, f) => o.value ? (be(), Oe("ha-card", {
+    return console.info("%c HA Floorplan Card %c 1395544 ", "background: #333; color: #fff", "background: #0ea5e9; color: #fff"), (l, f) => o.value ? (be(), Oe("ha-card", {
       key: 0,
       ref_key: "cardRef",
       ref: n,

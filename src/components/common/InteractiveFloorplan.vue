@@ -302,6 +302,9 @@ function getEntityLabel(entity: any) {
     if (entity.type === 'sensor' && state?.displayValue) {
         return state.displayValue;
     }
+    if (entity.type === 'sensor' && state?.state) {
+        return state.state;
+    }
     return entity.label;
 }
 
