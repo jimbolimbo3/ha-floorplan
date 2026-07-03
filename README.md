@@ -1,0 +1,75 @@
+# Home Assistant Floorplan Card
+
+A powerful, interactive floorplan visualization for Home Assistant. Features a built-in visual editor to define light zones and entity placements, exporting a ready-to-use YAML configuration.
+
+## Features
+- **Advanced Light Control**:
+  - Dynamically updates **Color** (RGB), **Brightness** (Opacity), and **Color Temperature**.
+  - Visual feedback for on/off states with customizable colors.
+  - Simply **Click to Toggle** lights directly from the floorplan.
+- **Media Player Integration**:
+  - Active states are visually highlighted.
+- **Visual Editor**:
+  - Drag & Drop interface to draw polygon zones.
+  - Instant YAML export for Lovelace dashboard.
+
+## Visual Editor
+
+**[Open the Editor](https://kishorviswanathan.github.io/ha-floorplan/)**
+
+Use the online editor to:
+1. Upload your floorplan image.
+2. Define zones and entities.
+3. Export the YAML configuration.
+
+---
+
+## Installation
+
+### Option A: Direct Link (Recommended)
+You can directly link to the JS file from the master branch using JSDelivr:
+
+1. Go to **Settings** > **Dashboards** > **Three dots** > **Resources**.
+2. **Add Resource**: (replace `<version>` with the version you want to use)
+   - URL: `https://cdn.jsdelivr.net/gh/kishorviswanathan/ha-floorplan@v<version>/release/ha-floorplan-card.js`
+   - Type: `JavaScript Module`
+3. Click **Create**.
+
+### Option B: Download
+If you prefer to host it locally:
+1. Download `ha-floorplan-card.js` from the `release` folder in the source (after running `npm run build:card`).
+2. Upload to `/config/www/` in Home Assistant.
+3. Add Resource with URL: `/local/ha-floorplan-card.js`.
+
+---
+
+## Dashboard Setup
+
+Once the resource is added (via Installation steps above):
+
+1. Go to your Home Assistant Dashboard.
+2. Click the **Pencil icon** (Edit Dashboard) > **Add Card**.
+3. Scroll down and select **Manual**.
+4. **Copy the YAML** exported from the Visual Editor.
+5. **Paste** it into the Manual Card configuration.
+6. Click **Save**.
+
+---
+
+## Local Development
+
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Run Editor**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Build All**:
+   ```bash
+   npm run build       # Builds Editor (dist/index.html)
+   npm run build:card  # Builds Card (dist/ha-floorplan-card.js)
+   ```
