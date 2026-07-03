@@ -1,5 +1,23 @@
-export type EntityType = 'light' | 'media_player' | 'camera';
+export type EntityType = 'light' | 'switch' | 'media_player' | 'camera' | 'sensor';
 export type EntityShape = 'circle' | 'square' | 'rect' | 'custom';
+export type SensorDeviceClass =
+  | 'temperature'
+  | 'humidity'
+  | 'pressure'
+  | 'carbon_dioxide'
+  | 'sound_pressure'
+  | 'data_rate'
+  | 'data_size'
+  | 'signal_strength'
+  | 'connectivity'
+  | 'battery'
+  | 'power'
+  | 'energy'
+  | 'illuminance'
+  | 'pm25'
+  | 'volatile_organic_compounds'
+  | 'voltage'
+  | 'current';
 
 // Used by Light and Switch entities
 export interface BinaryColors {
@@ -36,6 +54,7 @@ export interface EntityConfig {
   entityId: string; // HA Entity ID e.g. light.living_room
   label: string; // Display name
   type: EntityType;
+  sensorDeviceClass?: SensorDeviceClass;
   x: number; // Percentage 0-100
   y: number; // Percentage 0-100
   points?: { x: number; y: number }[]; // Polygon points (percentage)
@@ -58,4 +77,7 @@ export interface EntityState {
   color?: string; // hex or rgb string
   brightness?: number; // 0-255
   shouldLightUp?: boolean;
+  displayValue?: string;
+  unit?: string;
+  deviceClass?: string;
 }

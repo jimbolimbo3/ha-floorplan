@@ -65,6 +65,11 @@ const entityStates = computed(() => {
             } else if (entity.type === 'camera') {
                 const shouldLightUp = ['on', 'recording', 'streaming'].includes(state);
                 states[entity.entityId] = { state, shouldLightUp };
+            } else if (entity.type === 'sensor') {
+                const unit = haState.attributes.unit_of_measurement;
+                const deviceClass = haState.attributes.device_class || entity.sensorDeviceClass;
+                const displayValue = unit ? `${state} ${unit}` : state;
+                states[entity.entityId] = { state, unit, deviceClass, displayValue, shouldLightUp: false };
             } else {
                 states[entity.entityId] = { state };
             }
@@ -88,6 +93,8 @@ function handleEntityClick(entityId: string, type: string) {
         props.hass.callService('homeassistant', service, {
             entity_id: entityId
         });
+    } else if (type === 'sensor') {
+        handleEntityLongPress(entityId);
     } else {
         // Default toggle
         props.hass.callService('homeassistant', 'toggle', {

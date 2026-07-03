@@ -3,7 +3,15 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 import { execSync } from 'child_process';
 
-const commitHash = execSync('git describe --tags --always').toString().trim();
+function getAppVersion() {
+    try {
+        return execSync('git describe --tags --always', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    } catch {
+        return 'dev';
+    }
+}
+
+const appVersion = getAppVersion();
 
 export default defineConfig({
     plugins: [vue({
@@ -39,6 +47,6 @@ export default defineConfig({
     },
     define: {
         'process.env': {},
-        __APP_VERSION__: JSON.stringify(commitHash)
+        __APP_VERSION__: JSON.stringify(appVersion)
     }
 });

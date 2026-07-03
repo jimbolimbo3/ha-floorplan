@@ -10,8 +10,8 @@ const store = useFloorplanStore();
 const hasSelection = computed(() => !!store.selectedEntityId);
 const selectedEntity = computed(() => store.selectedEntity);
 
-function addEntity() {
-    store.addEntity('light');
+function addEntity(type: 'light' | 'sensor' = 'light') {
+    store.addEntity(type);
 }
 
 function deleteEntity() {
@@ -38,6 +38,11 @@ function updateEntityIdSuffix(event: Event, entity: any) {
     // If we wanted to be strict we'd call an action e.g. store.updateEntityId(id, newId)
     // But modifying the property is safe in standard Pinia.
     entity.entityId = `${prefix}${suffix}`;
+}
+
+function updateSensorDeviceClass(event: Event, entity: any) {
+    const select = event.target as HTMLSelectElement;
+    store.setEntitySensorDeviceClass(entity.id, select.value as any);
 }
 
 // Config updaters
@@ -189,7 +194,8 @@ const version = __APP_VERSION__;
                 <p class="hint">Select an entity to edit properties, or add new items.</p>
 
                 <div class="button-group">
-                    <button @click="addEntity">Add Entity</button>
+                    <button @click="addEntity('light')">Add Light</button>
+                    <button @click="addEntity('sensor')">Add Sensor</button>
                 </div>
 
                 <div class="config-actions">
@@ -237,6 +243,31 @@ const version = __APP_VERSION__;
                             <option value="switch">Switch</option>
                             <option value="media_player">Media Player</option>
                             <option value="camera">Camera</option>
+                            <option value="sensor">Sensor</option>
+                        </select>
+                    </div>
+
+                    <div v-if="selectedEntity.type === 'sensor'" class="input-group">
+                        <label>Sensor Type</label>
+                        <select :value="selectedEntity.sensorDeviceClass || 'temperature'"
+                            @change="e => updateSensorDeviceClass(e, selectedEntity)">
+                            <option value="temperature">Temperature</option>
+                            <option value="humidity">Humidity</option>
+                            <option value="pressure">Pressure</option>
+                            <option value="carbon_dioxide">CO2</option>
+                            <option value="sound_pressure">Noise (dB)</option>
+                            <option value="data_rate">LAN Traffic / Speed</option>
+                            <option value="data_size">Network Data Usage</option>
+                            <option value="signal_strength">Wi-Fi Signal</option>
+                            <option value="connectivity">LAN Port Status</option>
+                            <option value="battery">Battery</option>
+                            <option value="power">Power</option>
+                            <option value="energy">Energy</option>
+                            <option value="illuminance">Light Level</option>
+                            <option value="pm25">PM2.5</option>
+                            <option value="volatile_organic_compounds">VOC</option>
+                            <option value="voltage">Voltage</option>
+                            <option value="current">Current</option>
                         </select>
                     </div>
 
@@ -273,14 +304,14 @@ const version = __APP_VERSION__;
                         </div>
                     </div>
                     <div class="row">
-                        <div class="input-group">
+                        <div v-if="selectedEntity.type !== 'sensor'" class="input-group">
                             <label>Spread Radius (%)</label>
                             <input type="number" v-model="selectedEntity.style.gradientRadius" step="1">
                         </div>
                     </div>
 
                     <!-- Default Colors - hidden for camera entities -->
-                    <div v-if="selectedEntity.type !== 'camera'">
+                    <div v-if="!['camera', 'sensor'].includes(selectedEntity.type)">
                         <div class="section-title">Default Colors</div>
                         <div class="input-group">
                             <label>On Color</label>

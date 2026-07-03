@@ -84,6 +84,10 @@ function getPointsString(points?: { x: number, y: number }[]) {
   return points.map(p => `${p.x} ${p.y}`).join(',');
 }
 
+function hasLightZone(entity: any) {
+  return ['light', 'media_player', 'camera'].includes(entity.type);
+}
+
 function onPointMouseDown(index: number, event: MouseEvent) {
   event.stopPropagation();
   draggingKey.value = index;
@@ -179,7 +183,7 @@ function onPointTouchEnd() {
 
           <svg class="overlay-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
-              <radialGradient v-for="entity in store.entities" :key="'grad-' + entity.id"
+              <radialGradient v-for="entity in store.entities.filter(hasLightZone)" :key="'grad-' + entity.id"
                 :id="'grad-editor-' + entity.id" gradientUnits="userSpaceOnUse" :cx="entity.x" :cy="entity.y"
                 :r="entity.style.gradientRadius">
                 <stop offset="0%" :stop-color="(entity.style.colors as any).onColor || '#facc15'"
@@ -187,7 +191,7 @@ function onPointTouchEnd() {
                 <stop offset="100%" :stop-color="(entity.style.colors as any).onColor || '#facc15'" stop-opacity="0" />
               </radialGradient>
             </defs>
-            <polygon v-for="entity in store.entities" :key="'poly-' + entity.id"
+            <polygon v-for="entity in store.entities.filter(hasLightZone)" :key="'poly-' + entity.id"
               :points="getPointsString(entity.points)" :fill="`url(#grad-editor-${entity.id})`"
               :stroke="store.selectedEntityId === entity.id ? 'var(--color-primary)' : 'none'" stroke-width="0.5"
               style="pointer-events: none;" />

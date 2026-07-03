@@ -58,6 +58,13 @@ function getEntityValues(entity: any) {
     const state = props.entityStates[entity.entityId] || { state: 'off' };
     const { style } = entity;
 
+    if (entity.type === 'sensor') {
+        return {
+            color: getSensorTextColor(state.state, getSensorDeviceClass(entity, state)),
+            opacity: 1
+        };
+    }
+
     // Handle camera entities with state-specific colors
     if (entity.type === 'camera') {
         let color: string;
@@ -118,6 +125,19 @@ function getEntityVisualStyle(entity: any) {
     const { shape } = entity;
     const state = props.entityStates[entity.entityId] || { state: 'off' };
 
+    if (entity.type === 'sensor') {
+        return {
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'transparent',
+            opacity: 0,
+            borderRadius: '0',
+            cursor: 'pointer',
+            boxShadow: 'none',
+            transition: 'none'
+        };
+    }
+
     // Ensure minimum visibility for low brightness if ON
     // If Opacity is 0.8, and brightness is 1/255, we want at least say 0.1 or 0.2
     let effectiveOpacity = opacity;
@@ -143,17 +163,158 @@ function getEntityVisualStyle(entity: any) {
 
 function getLabelStyle(entity: any) {
     const { offsetX, offsetY, color } = entity.labelConfig || {};
+    const state = props.entityStates[entity.entityId];
     return {
         transform: `translate(-50%, -50%) translate(${offsetX || 0}%, ${offsetY || 0}%)`,
-        color: color || '#ffffff',
+        color: entity.type === 'sensor' ? getSensorTextColor(state?.state, getSensorDeviceClass(entity, state)) : color || '#ffffff',
         pointerEvents: 'auto' as const,
         cursor: 'pointer' as const
     };
 }
 
+function getSensorDeviceClass(entity: any, state?: EntityState) {
+    if (state?.deviceClass) return state.deviceClass;
+    if (entity.sensorDeviceClass) return entity.sensorDeviceClass;
+    if (state?.unit === 'dB') return 'sound_pressure';
+    if (state?.unit === 'ppm') return 'carbon_dioxide';
+    if (['Mbps', 'Mbit/s', 'MB/s', 'kB/s'].includes(state?.unit || '')) return 'data_rate';
+    if (['GB', 'MB', 'kWh'].includes(state?.unit || '')) return state?.unit === 'kWh' ? 'energy' : 'data_size';
+    if (state?.unit === 'dBm') return 'signal_strength';
+    if (state?.unit === '%') return 'humidity';
+    if (state?.unit === 'W') return 'power';
+    if (state?.unit === 'lx') return 'illuminance';
+    if (state?.unit === 'µg/m³') return 'pm25';
+    if (state?.unit === 'V') return 'voltage';
+    if (state?.unit === 'A') return 'current';
+    return 'temperature';
+}
+
+function getSensorTextColor(value?: string, deviceClass = 'temperature') {
+    if (deviceClass === 'connectivity') {
+        const normalizedValue = String(value || '').toLowerCase();
+        if (['on', 'online', 'connected', 'up', 'true'].includes(normalizedValue)) return '#22c55e';
+        if (['off', 'offline', 'disconnected', 'down', 'false', 'unavailable', 'unknown'].includes(normalizedValue)) return '#ef4444';
+        return '#f59e0b';
+    }
+
+    const numberValue = Number.parseFloat(String(value || '').replace(',', '.'));
+    if (!Number.isFinite(numberValue)) return '#ffffff';
+
+    if (deviceClass === 'humidity') {
+        if (numberValue < 30) return '#f59e0b';
+        if (numberValue <= 60) return '#22c55e';
+        if (numberValue <= 70) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'pressure') {
+        if (numberValue < 1000) return '#38bdf8';
+        if (numberValue <= 1025) return '#22c55e';
+        return '#f59e0b';
+    }
+
+    if (deviceClass === 'carbon_dioxide') {
+        if (numberValue < 800) return '#22c55e';
+        if (numberValue < 1200) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'sound_pressure') {
+        if (numberValue < 50) return '#22c55e';
+        if (numberValue < 65) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'data_rate') {
+        if (numberValue < 10) return '#ef4444';
+        if (numberValue < 100) return '#f59e0b';
+        return '#22c55e';
+    }
+
+    if (deviceClass === 'data_size') {
+        if (numberValue < 80) return '#22c55e';
+        if (numberValue < 120) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'signal_strength') {
+        if (numberValue <= -80) return '#ef4444';
+        if (numberValue <= -65) return '#f59e0b';
+        return '#22c55e';
+    }
+
+    if (deviceClass === 'battery') {
+        if (numberValue < 20) return '#ef4444';
+        if (numberValue < 50) return '#f59e0b';
+        return '#22c55e';
+    }
+
+    if (deviceClass === 'power') {
+        if (numberValue < 500) return '#22c55e';
+        if (numberValue < 1500) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'energy') {
+        if (numberValue < 5) return '#22c55e';
+        if (numberValue < 15) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'illuminance') {
+        if (numberValue < 100) return '#38bdf8';
+        if (numberValue < 800) return '#22c55e';
+        return '#f59e0b';
+    }
+
+    if (deviceClass === 'pm25') {
+        if (numberValue < 15) return '#22c55e';
+        if (numberValue < 35) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'volatile_organic_compounds') {
+        if (numberValue < 300) return '#22c55e';
+        if (numberValue < 1000) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (deviceClass === 'voltage') {
+        if (numberValue < 210 || numberValue > 245) return '#ef4444';
+        if (numberValue < 220 || numberValue > 240) return '#f59e0b';
+        return '#22c55e';
+    }
+
+    if (deviceClass === 'current') {
+        if (numberValue < 5) return '#22c55e';
+        if (numberValue < 12) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    if (numberValue < 18) return '#38bdf8';
+    if (numberValue < 24) return '#22c55e';
+    if (numberValue < 28) return '#f59e0b';
+    return '#ef4444';
+}
+
+function getEntityLabel(entity: any) {
+    const state = props.entityStates[entity.entityId];
+    if (entity.type === 'sensor' && state?.displayValue) {
+        return state.displayValue;
+    }
+    if (entity.type === 'sensor' && state?.state) {
+        return state.state;
+    }
+    return entity.label;
+}
+
 function getPointsString(points?: { x: number, y: number }[]) {
     if (!points) return '';
     return points.map(p => `${p.x} ${p.y}`).join(',');
+}
+
+function hasLightZone(entity: any) {
+    return ['light', 'media_player', 'camera'].includes(entity.type);
 }
 
 function isRecording(entity: any) {
@@ -175,7 +336,7 @@ function isRecording(entity: any) {
 
                 <svg class="overlay-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <defs>
-                        <radialGradient v-for="entity in props.config.entities" :key="'grad-' + entity.id"
+                        <radialGradient v-for="entity in props.config.entities.filter(hasLightZone)" :key="'grad-' + entity.id"
                             :id="'grad-' + entity.id" gradientUnits="userSpaceOnUse" :cx="entity.x" :cy="entity.y"
                             :r="entity.style.gradientRadius">
                             <stop offset="0%" :stop-color="getEntityValues(entity).color"
@@ -183,7 +344,7 @@ function isRecording(entity: any) {
                             <stop offset="100%" :stop-color="getEntityValues(entity).color" stop-opacity="0" />
                         </radialGradient>
                     </defs>
-                    <polygon v-for="entity in props.config.entities" :key="'poly-' + entity.id"
+                    <polygon v-for="entity in props.config.entities.filter(hasLightZone)" :key="'poly-' + entity.id"
                         :points="getPointsString(entity.points)"
                         :fill="props.entityStates[entity.entityId]?.shouldLightUp ? `url(#grad-${entity.id})` : 'transparent'"
                         stroke="none" style="pointer-events: none; transition: fill-opacity 0.3s ease;" />
@@ -198,7 +359,7 @@ function isRecording(entity: any) {
                     <div v-if="entity.labelConfig.show" class="entity-label" :style="getLabelStyle(entity)"
                         @pointerdown.stop="handlePointerDown($event, entity)"
                         @pointerup.stop="handlePointerUp($event, entity)" @pointerleave.stop="handlePointerLeave()">
-                        {{ entity.label }}
+                        {{ getEntityLabel(entity) }}
                     </div>
                 </div>
             </div>
