@@ -84,7 +84,7 @@ export const useFloorplanStore = defineStore('floorplan', () => {
             labelConfig: {
                 show: true,
                 offsetX: 0,
-                offsetY: 10, // px or %? Let's assume px for offset relative to center or bottom
+                offsetY: type === 'sensor' ? 0 : 10,
                 color: '#ffffff',
             }
         };

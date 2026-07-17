@@ -126,6 +126,11 @@ const labelRef = ref<HTMLElement | null>(null);
 
 function onLabelMouseDown(event: MouseEvent) {
   event.stopPropagation(); // Don't drag entity
+  if (props.entity.type === 'sensor') {
+    onMouseDown(event);
+    return;
+  }
+
   store.selectedEntityId = props.entity.id;
   isLabelDragging.value = true;
   labelDragStart.value = { x: event.clientX, y: event.clientY };
@@ -170,6 +175,11 @@ function onLabelMouseUp() {
 
 function onLabelTouchStart(event: TouchEvent) {
   event.stopPropagation();
+  if (props.entity.type === 'sensor') {
+    onTouchStart(event);
+    return;
+  }
+
   store.selectedEntityId = props.entity.id;
   const touch = event.touches[0];
   if (!touch) return;
@@ -254,8 +264,10 @@ const styleObject = computed(() => {
 const labelStyle = computed(() => {
   const { offsetX, offsetY, color } = props.entity.labelConfig || {};
   const state = store.entityStates[props.entity.entityId];
+  const labelOffsetX = props.entity.type === 'sensor' ? 0 : offsetX || 0;
+  const labelOffsetY = props.entity.type === 'sensor' ? 0 : offsetY || 0;
   return {
-    transform: `translate(-50%, -50%) translate(${offsetX || 0}%, ${offsetY || 0}%)`,
+    transform: `translate(-50%, -50%) translate(${labelOffsetX}%, ${labelOffsetY}%)`,
     color: props.entity.type === 'sensor' ? getSensorTextColor(state?.state, getSensorDeviceClass(state)) : color || '#ffffff',
   };
 });

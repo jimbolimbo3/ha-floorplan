@@ -164,8 +164,10 @@ function getEntityVisualStyle(entity: any) {
 function getLabelStyle(entity: any) {
     const { offsetX, offsetY, color } = entity.labelConfig || {};
     const state = props.entityStates[entity.entityId];
+    const labelOffsetX = entity.type === 'sensor' ? 0 : offsetX || 0;
+    const labelOffsetY = entity.type === 'sensor' ? 0 : offsetY || 0;
     return {
-        transform: `translate(-50%, -50%) translate(${offsetX || 0}%, ${offsetY || 0}%)`,
+        transform: `translate(-50%, -50%) translate(${labelOffsetX}%, ${labelOffsetY}%)`,
         color: entity.type === 'sensor' ? getSensorTextColor(state?.state, getSensorDeviceClass(entity, state)) : color || '#ffffff',
         pointerEvents: 'auto' as const,
         cursor: 'pointer' as const
